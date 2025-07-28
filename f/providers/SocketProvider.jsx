@@ -14,46 +14,51 @@ const SocketProvider = ({ children }) => {
   const [clients, setClients] = useState([]);
   const [currentLocation, setCurrentLocation] = useState([0, 0]);
 
-  const shareLocation = useCallback(() => {
-    if (!navigator.geolocation || !socket) return;
+  // 🔁 Share location live via watchPosition
+  useEffect(() => {
+    let watchId;
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        setCurrentLocation(() => [lat, lng]);
-        socket.emit("locationUpdate", { lat, lng });
-        console.log("Geolocation : :", lat , "  " , lng);
-      },
-      (err) => {
-        console.error("Geolocation error in socket page:", err);
-      },
-      { enableHighAccuracy: true, timeout: 5000 }
-    );
+    if (navigator.geolocation) {
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          setCurrentLocation([latitude, longitude]);
+          socket.emit("locationUpdate", { lat: latitude, lng: longitude });
+          console.log("📡 Live position:", latitude, longitude);
+        },
+        (err) => {
+          console.error("❌ Geolocation error:", err.code, err.message);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
+      );
+    } else {
+      console.error("❌ Geolocation is not supported");
+    }
+
+    return () => {
+      if (watchId) navigator.geolocation.clearWatch(watchId);
+    };
   }, []);
 
-
+  // 🔁 Main socket setup
   useEffect(() => {
     if (!socket) return;
-
-    if (!socket.connected) {
-      socket.connect();
-    }
+    if (!socket.connected) socket.connect();
 
     const registerUser = () => {
       console.log("✅ Registering user...");
       socket.emit("register", {
-        username: user.name || "Anonymous",
-        profileUrl: user.picture || "",
+        username: user?.name || "Anonymous",
+        profileUrl: user?.picture || "",
         lat: currentLocation[0] || 0,
         lng: currentLocation[1] || 0,
       });
     };
 
-    // 🔁 Lifecycle event logging
+    // 🔌 Socket connection lifecycle logging
     socket.on("connect", () => {
       console.log("🔌 Socket connected:", socket.id);
-      registerUser(); // Register on reconnect too
+      registerUser(); // Register on first connect and reconnect
     });
 
     socket.on("disconnect", (reason) => {
@@ -76,29 +81,34 @@ const SocketProvider = ({ children }) => {
       console.error("❌ Reconnect failed");
     });
 
+    // 🔄 Receive all locations
     const handleAllLocations = (data) => {
-      setClients(() => data);
+      setClients(data);
+
+      const isPresent = data.some(
+        (client) => client.username === (user?.name || "Anonymous")
+      );
+
+      if (!isPresent) {
+        console.warn("⚠️ User missing from list. Re-registering...");
+        registerUser();
+      }
     };
 
     socket.on("allLocations", handleAllLocations);
 
+    // Optional backup fetch
     const fetchClients = async () => {
       try {
         const res = await fetch(`/clients`);
         const data = await res.json();
-        setClients(() => data);
+        setClients(data);
       } catch (err) {
         console.error("Error fetching client list:", err);
       }
     };
 
-    setTimeout(fetchClients, 3000);
-    setTimeout(shareLocation , 1000);
-
-
-    const interval = setInterval(() => {
-      if (user) shareLocation();
-    }, 30 * 1000);
+    setTimeout(fetchClients, 3000); // Wait for initial socket events
 
     return () => {
       socket.off("connect");
@@ -108,11 +118,8 @@ const SocketProvider = ({ children }) => {
       socket.off("reconnect");
       socket.off("reconnect_failed");
       socket.off("allLocations", handleAllLocations);
-      clearInterval(interval);
     };
-  }, []);
-
-
+  }, [user, currentLocation]);
 
   return (
     <SocketContext.Provider value={{ clients }}>
