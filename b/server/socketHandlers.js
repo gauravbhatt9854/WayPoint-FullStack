@@ -59,5 +59,5 @@ export function registerSocketHandlers(io) {
     io.emit("allLocations", locations);
     console.log("List of Registered Users:");
     locations.forEach((user) => console.log(user.username));
-  }, 60*1000);
+  }, 10*1000);
 }

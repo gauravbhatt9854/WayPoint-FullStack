@@ -10,9 +10,9 @@ import socket from "./socketInstance";
 const SocketContext = createContext(null);
 
 const SocketProvider = ({ children }) => {
-  const SERVER_URL = process.env.VITE_SOCKET_SERVER;
-  const { user , isAuthenticated } = useAuth0();
+  const { user, isAuthenticated } = useAuth0();
   const [clients, setClients] = useState([]);
+  const [currentLocation, setCurrentLocation] = useState([]);
 
   // Shared timestamp for throttling location updates
 
@@ -23,6 +23,7 @@ const SocketProvider = ({ children }) => {
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
+        setCurrentLocation((pre)=> [lat , lng]);
         socket.emit("locationUpdate", { lat, lng });
       },
       (err) => {
@@ -42,34 +43,50 @@ const SocketProvider = ({ children }) => {
     socket.emit("register", {
       username: user.name || "Anonymous",
       profileUrl: user.picture || "",
-      lat :0,
-      lng :0,
+      lat: 0,
+      lng: 0,
     });
 
     console.log("user register successfully");
 
 
     // Delay fetching full client list
-const fetchClients = async () => {
-  try {
-    
-    const res = await fetch(`/clients`);
-    const data = await res.json(); // ✅ PARSE JSON
-    console.log(data);
-    setClients(() => data);        // ✅ UPDATE STATE
-  } catch (err) {
-    console.error("Error fetching client list:", err);
-  }
-};
+    const fetchClients = async () => {
+      try {
 
-    setTimeout(fetchClients, 5000);
-    setTimeout(shareLocation, 2000);
+        const res = await fetch(`/clients`);
+        const data = await res.json(); // ✅ PARSE JSON
+        console.log(data);
+        setClients(() => data);        // ✅ UPDATE STATE
+      } catch (err) {
+        console.error("Error fetching client list:", err);
+      }
+    };
+
+    setTimeout(fetchClients, 3000);
+    setTimeout(shareLocation, 1000);
 
 
     // Receive updates from all clients
     const handleAllLocations = (data) => {
-      setClients(() => data); // Just update, don’t echo own location again
+      setClients(() => data);
+
+      // Check if current user is missing
+      const isPresent = data.some(
+        (client) => client.username === (user?.name || "Anonymous")
+      );
+
+      if (!isPresent) {
+        console.warn("⚠️ User not found in client list, re-registering...");
+        socket.emit("register", {
+          username: user.name || "Anonymous",
+          profileUrl: user.picture || "",
+          lat: currentLocation[0],
+          lng: currentLocation[1],
+        });
+      }
     };
+
 
     socket.on("allLocations", handleAllLocations);
 
@@ -83,7 +100,7 @@ const fetchClients = async () => {
       socket.disconnect(); // optional: can skip this if you want socket to persist across routes
       clearInterval(interval);
     };
-  }, [socket , isAuthenticated , user]);
+  }, [socket, isAuthenticated, user]);
 
   return (
     <SocketContext.Provider

@@ -10,19 +10,6 @@ export default defineConfig(({ mode }) => {
 
     root: path.resolve(__dirname), // f/
     plugins: [react()],
-    server: {
-      proxy: {
-        '/api': {
-          target: 'http://localhost:3000',
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
-        },
-        '/socket.io': {
-          target: 'ws://localhost:5173',
-          ws: true,
-        }
-      }
-    },
     build: {
       outDir: path.resolve(__dirname, '../f/dist'), // output to /b/dist
       emptyOutDir: true,
