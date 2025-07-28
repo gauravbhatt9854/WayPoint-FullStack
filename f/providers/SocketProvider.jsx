@@ -10,7 +10,7 @@ import socket from "./socketInstance";
 const SocketContext = createContext(null);
 
 const SocketProvider = ({ children }) => {
-  const { user, isAuthenticated } = useAuth0();
+  const { user } = useAuth0();
   const [clients, setClients] = useState([]);
   const [currentLocation, setCurrentLocation] = useState([0, 0]);
 
@@ -23,6 +23,7 @@ const SocketProvider = ({ children }) => {
         const lng = position.coords.longitude;
         setCurrentLocation(() => [lat, lng]);
         socket.emit("locationUpdate", { lat, lng });
+        console.log("Geolocation : :", currentLocation);
       },
       (err) => {
         console.error("Geolocation error in socket page:", err);
@@ -85,7 +86,6 @@ const SocketProvider = ({ children }) => {
       try {
         const res = await fetch(`/clients`);
         const data = await res.json();
-        console.log(data);
         setClients(() => data);
       } catch (err) {
         console.error("Error fetching client list:", err);
@@ -93,7 +93,7 @@ const SocketProvider = ({ children }) => {
     };
 
     setTimeout(fetchClients, 3000);
-    setTimeout(() => { shareLocation }, 1000);
+    setTimeout(shareLocation , 1000);
 
 
     const interval = setInterval(() => {
