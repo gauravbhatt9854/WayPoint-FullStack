@@ -18,7 +18,6 @@ export function registerSocketHandlers(io) {
     // 💾 Handle registration
     socket.on("register", ({ username, profileUrl, lat, lng }) => {
       addClient(socket.id, { username, profileUrl, lat, lng });
-      console.log(`👤 Registered: ${username}`);
     });
 
     // 📍 Handle location updates

@@ -1,10 +1,16 @@
 // clients.js
 const clients = new Map();
 
-export function addClient(socketId, { username, profileUrl , lat , lng }) {
-  console.log("client registered successfully");
+export function addClient(socketId, { username, profileUrl, lat, lng }) {
+  if (clients.has(socketId)) {
+    console.log(`🔁 Updating existing client: ${username} (${socketId})`);
+  } else {
+    console.log(`🆕 Adding new client: ${username} (${socketId})`);
+  }
+
   clients.set(socketId, { username, profileUrl, lat, lng });
 }
+
 
 export function updateLocation(socketId, { lat, lng }) {
   const client = clients.get(socketId);

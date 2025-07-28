@@ -76,16 +76,7 @@ useEffect(() => {
   });
 
   const handleAllLocations = (data) => {
-    setClients(data);
-
-    // const isPresent = data.some(
-    //   (client) => client.username === (user?.name || "Anonymous")
-    // );
-
-    // if (!isPresent) {
-    //   console.warn("⚠️ User missing from list. Re-registering...");
-    //   registerUser();
-    // }
+    setClients(()=>data);
   };
 
   socket.on("allLocations", handleAllLocations);
