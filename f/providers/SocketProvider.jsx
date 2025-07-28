@@ -21,7 +21,7 @@ const SocketProvider = ({ children }) => {
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        setCurrentLocation([lat, lng]);
+        setCurrentLocation(() => [lat, lng]);
         socket.emit("locationUpdate", { lat, lng });
       },
       (err) => {
@@ -32,70 +32,85 @@ const SocketProvider = ({ children }) => {
   }, []);
 
 
-useEffect(() => {
-  if (!socket) return;
+  useEffect(() => {
+    if (!socket) return;
 
-  if (!socket.connected) {
-    socket.connect();
-  }
+    if (!socket.connected) {
+      socket.connect();
+    }
 
-  const registerUser = () => {
-    console.log("✅ Registering user...");
-    socket.emit("register", {
-      username: user.name || "Anonymous",
-      profileUrl: user.picture || "",
-      lat: currentLocation[0] || 0,
-      lng: currentLocation[1] || 0,
+    const registerUser = () => {
+      console.log("✅ Registering user...");
+      socket.emit("register", {
+        username: user.name || "Anonymous",
+        profileUrl: user.picture || "",
+        lat: currentLocation[0] || 0,
+        lng: currentLocation[1] || 0,
+      });
+    };
+
+    // 🔁 Lifecycle event logging
+    socket.on("connect", () => {
+      console.log("🔌 Socket connected:", socket.id);
+      registerUser(); // Register on reconnect too
     });
-  };
 
-  // 🔁 Lifecycle event logging
-  socket.on("connect", () => {
-    console.log("🔌 Socket connected:", socket.id);
-    registerUser(); // Register on reconnect too
-  });
+    socket.on("disconnect", (reason) => {
+      console.warn("❌ Socket disconnected:", reason);
+    });
 
-  socket.on("disconnect", (reason) => {
-    console.warn("❌ Socket disconnected:", reason);
-  });
+    socket.on("connect_error", (err) => {
+      console.error("❗ Connection error:", err.message);
+    });
 
-  socket.on("connect_error", (err) => {
-    console.error("❗ Connection error:", err.message);
-  });
+    socket.on("reconnect_attempt", (attempt) => {
+      console.log(`🔄 Reconnect attempt #${attempt}`);
+    });
 
-  socket.on("reconnect_attempt", (attempt) => {
-    console.log(`🔄 Reconnect attempt #${attempt}`);
-  });
+    socket.on("reconnect", (attempt) => {
+      console.log(`✅ Reconnected after ${attempt} tries`);
+    });
 
-  socket.on("reconnect", (attempt) => {
-    console.log(`✅ Reconnected after ${attempt} tries`);
-  });
+    socket.on("reconnect_failed", () => {
+      console.error("❌ Reconnect failed");
+    });
 
-  socket.on("reconnect_failed", () => {
-    console.error("❌ Reconnect failed");
-  });
+    const handleAllLocations = (data) => {
+      setClients(() => data);
+    };
 
-  const handleAllLocations = (data) => {
-    setClients(()=>data);
-  };
+    socket.on("allLocations", handleAllLocations);
 
-  socket.on("allLocations", handleAllLocations);
+    const fetchClients = async () => {
+      try {
+        const res = await fetch(`/clients`);
+        const data = await res.json();
+        console.log(data);
+        setClients(() => data);
+      } catch (err) {
+        console.error("Error fetching client list:", err);
+      }
+    };
 
-  const interval = setInterval(() => {
-    if (user) shareLocation();
-  }, 30 * 1000);
+    setTimeout(fetchClients, 3000);
+    setTimeout(() => { shareLocation }, 1000);
 
-  return () => {
-    socket.off("connect");
-    socket.off("disconnect");
-    socket.off("connect_error");
-    socket.off("reconnect_attempt");
-    socket.off("reconnect");
-    socket.off("reconnect_failed");
-    socket.off("allLocations", handleAllLocations);
-    clearInterval(interval);
-  };
-}, []);
+
+    const interval = setInterval(() => {
+      if (user) shareLocation();
+    }, 30 * 1000);
+
+    return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("connect_error");
+      socket.off("reconnect_attempt");
+      socket.off("reconnect");
+      socket.off("reconnect_failed");
+      socket.off("allLocations", handleAllLocations);
+      clearInterval(interval);
+    };
+  }, []);
 
 
 
