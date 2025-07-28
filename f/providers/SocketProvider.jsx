@@ -53,7 +53,7 @@ const SocketProvider = ({ children }) => {
 const fetchClients = async () => {
   try {
     
-    const res = await fetch(`${SERVER_URL}/clients`);
+    const res = await fetch(`/clients`);
     const data = await res.json(); // ✅ PARSE JSON
     console.log(data);
     setClients(() => data);        // ✅ UPDATE STATE

@@ -1,21 +1,22 @@
-# Use official Node.js 18 image
-FROM node:18
+# Use Node.js 18 base image (force platform if needed)
+FROM --platform=linux/arm64 node:18
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Install dependencies early to leverage Docker cache
 COPY package*.json ./
 RUN npm install
 
-# Copy rest of the app source
+# Copy the rest of the application code
 COPY . .
 
-# Build the application
+# Build the Vite application
 RUN npm run build
 
-# Expose the port (optional, change if needed)
+
+# Expose the port Vite uses (5173 for dev, but production usually uses 3000 or serves static)
 EXPOSE 5173
 
-# Start the application
+# Start the app (adjust if you're serving static files or using a framework)
 CMD ["npm", "start"]
