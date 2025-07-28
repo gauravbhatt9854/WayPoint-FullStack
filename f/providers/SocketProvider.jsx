@@ -78,14 +78,14 @@ useEffect(() => {
   const handleAllLocations = (data) => {
     setClients(data);
 
-    const isPresent = data.some(
-      (client) => client.username === (user?.name || "Anonymous")
-    );
+    // const isPresent = data.some(
+    //   (client) => client.username === (user?.name || "Anonymous")
+    // );
 
-    if (!isPresent) {
-      console.warn("⚠️ User missing from list. Re-registering...");
-      registerUser();
-    }
+    // if (!isPresent) {
+    //   console.warn("⚠️ User missing from list. Re-registering...");
+    //   registerUser();
+    // }
   };
 
   socket.on("allLocations", handleAllLocations);
