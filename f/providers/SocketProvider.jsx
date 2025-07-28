@@ -23,7 +23,7 @@ const SocketProvider = ({ children }) => {
         const lng = position.coords.longitude;
         setCurrentLocation(() => [lat, lng]);
         socket.emit("locationUpdate", { lat, lng });
-        console.log("Geolocation : :", currentLocation);
+        console.log("Geolocation : :", lat , "  " , lng);
       },
       (err) => {
         console.error("Geolocation error in socket page:", err);
