@@ -11,11 +11,17 @@ export function registerSocketHandlers(io) {
   io.on("connection", (socket) => {
     console.log(`✅ User connected: ${socket.id}`);
 
-    socket.on("register", ({ username, profileUrl , lat , lng }) => {
-      addClient(socket.id, { username, profileUrl , lat , lng });
+    // 🔔 Ask the client to send registration data
+    socket.emit("requestRegistration");
+    console.log(`📩 Requested registration from: ${socket.id}`);
+
+    // 💾 Handle registration
+    socket.on("register", ({ username, profileUrl, lat, lng }) => {
+      addClient(socket.id, { username, profileUrl, lat, lng });
       console.log(`👤 Registered: ${username}`);
     });
 
+    // 📍 Handle location updates
     socket.on("locationUpdate", ({ lat, lng }) => {
       if (!getClient(socket.id)) {
         console.warn(`⚠️ Location from unregistered user: ${socket.id}`);
@@ -24,6 +30,7 @@ export function registerSocketHandlers(io) {
       updateLocation(socket.id, { lat, lng });
     });
 
+    // 💬 Handle chat messages
     socket.on("chatMessage", (message) => {
       const sender = getClient(socket.id);
       if (!sender) {
@@ -42,6 +49,7 @@ export function registerSocketHandlers(io) {
       socket.broadcast.emit("newChatMessage", chatData);
     });
 
+    // ❌ Handle disconnection
     socket.on("disconnect", () => {
       const user = getClient(socket.id);
       if (user) {
@@ -53,11 +61,11 @@ export function registerSocketHandlers(io) {
     });
   });
 
-  // Periodic location broadcast
+  // 🔄 Broadcast all clients' locations periodically
   setInterval(() => {
     const locations = getAllClients();
     io.emit("allLocations", locations);
-    console.log("List of Registered Users:");
+    console.log("📡 Broadcasting registered clients:");
     locations.forEach((user) => console.log(user.username));
-  }, 10*1000);
+  }, 10 * 1000);
 }
