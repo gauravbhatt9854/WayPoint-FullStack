@@ -8,7 +8,7 @@ const SocketProvider = ({ children }) => {
   const { user } = useContext(UserContext);
   const [clients, setClients] = useState([]);
   const [currentLocation, setCurrentLocation] = useState([0, 0]);
-  const SERVER_URL = import.meta.env.VITE_SOCKET_SERVER;
+  const SERVER_URL = process.env.VITE_SOCKET_SERVER;
 
   // ---------------- Live location updates ----------------
   useEffect(() => {

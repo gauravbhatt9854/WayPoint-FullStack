@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     define: {
-      'process.env': env, // allow usage of import.meta.env.VITE_*
+      'process.env': env, // allow usage of process.env.VITE_*
     },
   };
 });

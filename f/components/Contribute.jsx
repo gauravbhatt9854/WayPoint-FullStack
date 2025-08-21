@@ -9,7 +9,7 @@ const Contribute = () => {
   // ✅ If either is true, return null (hide this page)
   if (isChat || isMap) return null;
 
-  const VITE_REPO = import.meta.env.VITE_REPO;
+  const VITE_REPO = process.env.VITE_REPO;
 
   const handleContributeClick = () => {
     window.open(VITE_REPO, '_blank');

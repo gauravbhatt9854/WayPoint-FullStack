@@ -33,7 +33,7 @@ const Map = () => {
 
   const getClientIcon = (profileUrl) =>
     new L.Icon({
-      iconUrl: profileUrl || import.meta.env.VITE_RANDOM_LOGO,
+      iconUrl: profileUrl || process.env.VITE_RANDOM_LOGO,
       iconSize: [40, 40],
       iconAnchor: [20, 40],
       popupAnchor: [0, -40],

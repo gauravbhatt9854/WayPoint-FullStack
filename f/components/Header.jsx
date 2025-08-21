@@ -9,7 +9,7 @@ const Header = () => {
   const { list, currMap, setCurrMap , setIsMap } = useContext(MapContext);
   const { setIsChat } = useContext(ChatContext);
   const { user, handleLogout } = useContext(UserContext);
-  const logo = import.meta.env.VITE_SAMPLE_LOGO;
+  const logo = process.env.VITE_SAMPLE_LOGO;
 
   return (
     <header className="flex flex-row items-start justify-between bg-gray-900 text-white p-2 shadow-md w-full">
