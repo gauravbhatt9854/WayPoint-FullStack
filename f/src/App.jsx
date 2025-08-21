@@ -1,36 +1,43 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, useContext, useEffect, useState } from "react";
 import "./App.css";
-import './index.css'; // assuming Tailwind is imported here
-import { useAuth0 } from "@auth0/auth0-react";
-import { SocketProvider } from "../providers/SocketProvider.jsx";
-import { ChatProvider } from "../providers/ChatProvider.jsx";
-import { MapProvider } from "../providers/MapProvider.jsx";
+import './index.css';
+import { UserContext } from "../providers/UserProvider.jsx";
+import { jwtDecode } from "jwt-decode";
 
-const Header = lazy(() => import("../components/Header"));
+
 const Home = lazy(() => import("../components/Home"));
 const LoginPage = lazy(() => import("../components/LoginPage"));
 
-function App() {
+function App() { 
+  const { user, setUser } = useContext(UserContext);
 
-  const { isAuthenticated, isLoading } = useAuth0();
+  // Check localStorage for existing token on mount
+  useEffect(() => {
+    const token = localStorage.getItem("googleToken");
+    if (token) {
+      try {
+        const decodedUser = jwtDecode(token);
+        setUser(decodedUser);
+      } catch (err) {
+        console.log("Invalid token, clearing localStorage");
+        localStorage.removeItem("googleToken");
+      }
+    }
+  }, []);
 
-  if (isLoading) return <div>Loading...</div>;
-
-  if (!isAuthenticated) {
-    return <div className="h-screen w-screen overflow-hidden">
-      <LoginPage />
-    </div>
+  if (!user) {
+    return (
+      <div>
+        <LoginPage />
+      </div>
+    );
   }
 
-  if (isAuthenticated) {
-    return <div className="h-screen w-screen overflow-hidden">
-      <SocketProvider>
-        <ChatProvider><MapProvider><Header /></MapProvider></ChatProvider>
-      </SocketProvider>
+  return (
+    <div>
       <Home />
     </div>
-  }
-
+  );
 }
 
 export { App };

@@ -1,43 +1,60 @@
-import { useAuth0 } from "@auth0/auth0-react";
+import { useContext } from "react";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
+import { UserContext } from "../providers/UserProvider";
 
 const LoginPage = () => {
+  const { user, setUser } = useContext(UserContext);
 
-  console.log(process.env.VITE_CLIENT);
-  console.log("hello your process env is above");
-  const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
-        <div className="text-gray-500">Loading...</div>
-      </div>
-    );
-  }
+  const handleSuccess = (credentialResponse) => {
+    const token = credentialResponse.credential;
+    if (!token) return;
+
+    const decodedUser = jwtDecode(token); // decode JWT
+    setUser(decodedUser); // set in context
+    console.log(decodedUser)
+    localStorage.setItem("googleToken", token); // optional persist
+  };
+
+  const handleError = () => {
+    console.log("Login Failed");
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem("googleToken");
+  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      {/* Content Section */}
-      <div className="text-center p-6 max-w-md w-full bg-white rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-gray-700 mb-4">
-          Welcome to Our Application
-        </h1>
+      <div className="text-center p-6 max-w-sm w-full bg-white rounded-lg shadow-lg">
+        <h1 className="text-3xl font-bold text-gray-700 mb-6">Welcome</h1>
 
-        <p className="text-lg text-gray-600 mb-6">
-          Please log in to access the content.
-        </p>
-
-        {/* If user is not authenticated, show Google login button */}
-        {!isAuthenticated ? (
+        {!user ? (
+          <GoogleLogin
+            onSuccess={handleSuccess}
+            onError={handleError}
+            text="continue_with"
+            width="100%"
+          />
+        ) : (
           <div>
+            <img
+              src={user.picture}
+              alt="avatar"
+              className="w-20 h-20 mx-auto rounded-full mb-4"
+            />
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">
+              {user.name}
+            </h2>
+            <p className="text-gray-500 mb-4">{user.email}</p>
             <button
-              onClick={() => loginWithRedirect({ connection: "google" })}
-              className="w-full flex justify-center items-center bg-blue-500 text-white py-3 px-6 rounded-md hover:bg-blue-600 transition duration-300"
+              onClick={handleLogout}
+              className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-300"
             >
-              Log in with Google
+              Logout
             </button>
           </div>
-        ) : (
-          // If authenticated, show message
-          <p className="text-lg text-green-500 mt-4">You are already logged in!</p>
         )}
       </div>
     </div>

@@ -1,10 +1,7 @@
 import React, { createContext, useState } from 'react'
-import { useAuth0 } from "@auth0/auth0-react";
 const MapContext = createContext();
 
 const MapProvider = (props) => {
-    const { isAuthenticated } = useAuth0();
-    if (!isAuthenticated) return null;
 
     const [currMap, setCurrMap] = useState(2);
     const [isMap, setIsMap] = useState(true);

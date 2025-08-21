@@ -1,11 +1,11 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { ChatContext } from "../providers/ChatProvider";
 import socket from "../providers/socketInstance";
-import { useAuth0 } from "@auth0/auth0-react";
+import { UserContext } from "../providers/UserProvider";
 
 const Chat = () => {
   const { isChat } = useContext(ChatContext);
-  const { user } = useAuth0();
+  const { user } = useContext(UserContext);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
@@ -50,8 +50,10 @@ const Chat = () => {
   // if (isChat || user) return null;
 
   return (
-    <div className={`${isChat ? 'block' : 'hidden'} h-[50%] w-[85%] lg:h-[85%] lg:w-[50%] bg-white shadow-lg rounded-lg border border-gray-300`}>
+    <div className={`${isChat ? 'block' : 'hidden'} h-[50%] w-[95%] sm:w-[90%] md:w-[85%] lg:h-[85%] lg:w-[50%] bg-white shadow-lg rounded-lg border border-gray-300`}>
       <div className="flex flex-col h-full">
+
+        {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 && (
             <div className="text-center text-gray-500 font-bold">
@@ -62,8 +64,7 @@ const Chat = () => {
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`flex items-start mb-2 ${msg.username === "You" ? "justify-end" : "justify-start"
-                }`}
+              className={`flex items-start mb-2 ${msg.username === "You" ? "justify-end" : "justify-start"}`}
             >
               {msg.username !== "You" && (
                 <img
@@ -72,18 +73,12 @@ const Chat = () => {
                   className="w-8 h-8 rounded-full mr-2"
                 />
               )}
-              <div>
-                <div
-                  className={`p-2 rounded-lg max-w-xs break-words ${msg.username === "You"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-800"
-                    }`}
-                >
+              <div className="min-w-0">
+                <div className={`p-2 rounded-lg max-w-xs break-words ${msg.username === "You" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"}`}>
                   <p className="text-sm">{msg.message}</p>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  {msg.username} •{" "}
-                  {new Date(msg.timestamp).toLocaleTimeString()}
+                  {msg.username} • {new Date(msg.timestamp).toLocaleTimeString()}
                 </p>
               </div>
             </div>
@@ -91,26 +86,26 @@ const Chat = () => {
           <div ref={messagesEndRef}></div>
         </div>
 
-        <form
-          onSubmit={sendMessage}
-          className="flex p-2 border-t border-gray-300"
-        >
+        {/* Input */}
+        <form onSubmit={sendMessage} className="flex p-2 border-t border-gray-300 gap-2">
           <input
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none"
+            className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none min-w-0"
           />
           <button
             type="submit"
-            className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex-shrink-0"
           >
             Send
           </button>
         </form>
+
       </div>
     </div>
+
   );
 };
 

@@ -61,10 +61,10 @@ export function registerSocketHandlers(io) {
   });
 
   // 🔄 Broadcast all clients' locations periodically
-  setInterval(() => {
-    const locations = getAllClients();
-    io.emit("allLocations", locations);
-    console.log("📡 Broadcasting registered clients:");
-    locations.forEach((user) => console.log(user.username));
-  }, 10 * 1000);
+  // setInterval(() => {
+  //   const locations = getAllClients();
+  //   io.emit("allLocations", locations);
+  //   console.log("📡 Broadcasting registered clients:");
+  //   locations.forEach((user) => console.log(user.username));
+  // }, 10 * 1000);
 }
