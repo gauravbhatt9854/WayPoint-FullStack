@@ -8,7 +8,6 @@ const SocketProvider = ({ children }) => {
   const { user } = useContext(UserContext);
   const [clients, setClients] = useState([]);
   const [currentLocation, setCurrentLocation] = useState([0, 0]);
-  const SERVER_URL = process.env.VITE_SOCKET_SERVER;
 
   // ---------------- Live location updates ----------------
   useEffect(() => {
@@ -40,7 +39,7 @@ const SocketProvider = ({ children }) => {
 
     const fetchClients = async () => {
       try {
-        const res = await fetch(`${SERVER_URL}/clients`);
+        const res = await fetch(`/clients`);
         const data = await res.json();
         setClients(() => data);
       } catch (err) {
