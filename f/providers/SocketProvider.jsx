@@ -65,7 +65,7 @@ const SocketProvider = ({ children }) => {
       socket.off("disconnect");
       clearInterval(interval);
     };
-  }, [user, SERVER_URL]);
+  }, [user]);
 
   // ---------------- Emit location every 10 seconds ----------------
   useEffect(() => {
