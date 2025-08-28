@@ -1,4 +1,4 @@
-import { useState, createContext, useEffect, useContext } from "react";
+import { useState, createContext, useEffect, useContext, useRef } from "react";
 import socket from "./socketInstance";
 import { UserContext } from "./UserProvider";
 
@@ -8,31 +8,32 @@ const SocketProvider = ({ children }) => {
   const { user } = useContext(UserContext);
   const [clients, setClients] = useState([]);
   const [currentLocation, setCurrentLocation] = useState([0, 0]);
+  const intervalRef = useRef(null);
 
-  // ---------------- Live location updates ----------------
+  // ---------------- Live location tracking ----------------
   useEffect(() => {
-    let watchId;
-    if (navigator.geolocation) {
-      watchId = navigator.geolocation.watchPosition(
-        (pos) => setCurrentLocation([pos.coords.latitude, pos.coords.longitude]),
-        (err) => console.error("Geolocation error:", err),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
-      );
-    }
-    return () => watchId && navigator.geolocation.clearWatch(watchId);
+    if (!navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => setCurrentLocation([pos.coords.latitude, pos.coords.longitude]),
+      (err) => console.error("Geolocation error:", err),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  // ---------------- Socket setup ----------------
+  // ---------------- Socket connection ----------------
   useEffect(() => {
-    if (!socket) return;
-    if (!socket.connected) 
-    {
-      console.log("Socket not connected, connecting...");
-      socket.connect();
+    if (!user) {
+      if (socket.connected) socket.disconnect();
+      return;
     }
 
+    console.log("🔌 Connecting socket...");
+    socket.connect();
+
     const registerUser = () => {
-      if (!user) return;
       socket.emit("register", {
         username: user.name || "Anonymous",
         profileUrl: user.picture || "",
@@ -41,49 +42,45 @@ const SocketProvider = ({ children }) => {
       });
     };
 
-    const fetchClients = async () => {
-      try {
-        const res = await fetch(`/clients`);
-        const data = await res.json();
-        setClients(() => data);
-      } catch (err) {
-        console.error("Error fetching clients:", err);
-      }
-    };
-
+    // socket events
     socket.on("connect", () => {
-      console.log("Socket connected:", socket.id);
+      console.log("✅ Socket connected:", socket.id);
       registerUser();
     });
 
-    socket.on("disconnect", (reason) => console.warn("Socket disconnected:", reason));
+    socket.on("disconnect", (reason) => {
+      console.warn("⚠️ Socket disconnected:", reason);
+    });
 
-    fetchClients();
+    socket.on("clients", (data) => {
+      setClients(data);
+    });
 
-    // Then fetch every 5 seconds
-    const interval = setInterval(fetchClients, 5000);
-
+    // 🔄 Har 5 second me clients list maango
+    intervalRef.current = setInterval(() => {
+      socket.emit("getClients");
+    }, 5000);
 
     return () => {
       socket.off("connect");
       socket.off("disconnect");
-      clearInterval(interval);
+      socket.off("clients");
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [user]);
+  }, [user]); // 🔑 location change hone par bhi re-register
 
   // ---------------- Emit location every 10 seconds ----------------
   useEffect(() => {
-    if (!user) return;
-    const interval = setInterval(() => {
-      if (socket.connected) {
-        socket.emit("locationUpdate", {
-          lat: currentLocation[0],
-          lng: currentLocation[1],
-        });
-      }
+    if (!user || !socket.connected) return;
+
+    const id = setInterval(() => {
+      socket.emit("locationUpdate", {
+        lat: currentLocation[0],
+        lng: currentLocation[1],
+      });
     }, 10000);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(id);
   }, [currentLocation, user]);
 
   return (

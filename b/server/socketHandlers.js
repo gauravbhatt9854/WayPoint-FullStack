@@ -11,14 +11,18 @@ export function registerSocketHandlers(io) {
   io.on("connection", (socket) => {
     console.log(`✅ User connected: ${socket.id}`);
 
-    // 🔔 Ask the client to send registration data
-    socket.emit("requestRegistration");
-    console.log(`📩 Requested registration from: ${socket.id}`);
-
     // 💾 Handle registration
     socket.on("register", ({ username, profileUrl, lat, lng }) => {
       addClient(socket.id, { username, profileUrl, lat, lng });
+      setTimeout(() => {
+        io.emit("clients", getAllClients());
+      }, 500); // 0.5 second baad
     });
+
+    socket.on("getClients", () => {
+      socket.emit("clients", getAllClients());
+    });
+
 
     // 📍 Handle location updates
     socket.on("locationUpdate", ({ lat, lng }) => {
@@ -59,12 +63,4 @@ export function registerSocketHandlers(io) {
       deleteClient(socket.id);
     });
   });
-
-  // 🔄 Broadcast all clients' locations periodically
-  // setInterval(() => {
-  //   const locations = getAllClients();
-  //   io.emit("allLocations", locations);
-  //   console.log("📡 Broadcasting registered clients:");
-  //   locations.forEach((user) => console.log(user.username));
-  // }, 10 * 1000);
 }
