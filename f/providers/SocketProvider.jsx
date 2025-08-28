@@ -56,16 +56,10 @@ const SocketProvider = ({ children }) => {
       setClients(data);
     });
 
-    // 🔄 Har 5 second me clients list maango
-    intervalRef.current = setInterval(() => {
-      socket.emit("getClients");
-    }, 5000);
-
     return () => {
       socket.off("connect");
       socket.off("disconnect");
       socket.off("clients");
-      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [user]); // 🔑 location change hone par bhi re-register
 

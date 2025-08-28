@@ -8,6 +8,23 @@ import {
 } from "./clients.js";
 
 export function registerSocketHandlers(io) {
+  let broadcastInterval = null;
+
+  const startBroadcastInterval = () => {
+    if (!broadcastInterval && getAllClients().length >= 2) {
+      broadcastInterval = setInterval(() => {
+        const clients = getAllClients();
+        if (clients.length >= 2) {
+          console.log(`📤 [Interval Broadcast] Clients: ${clients.length}`);
+          io.emit("clients", clients);
+        } else {
+          clearInterval(broadcastInterval);
+          broadcastInterval = null;
+        }
+      }, 5000); // har 5 second me broadcast
+    }
+  };
+
   io.on("connection", (socket) => {
     console.log(`✅ [Connected] Socket ID: ${socket.id}`);
 
@@ -16,21 +33,19 @@ export function registerSocketHandlers(io) {
       console.log(`📥 [Register] User: ${username}, Lat: ${lat}, Lng: ${lng}`);
       addClient(socket.id, { username, profileUrl, lat, lng });
 
+      // initial broadcast after 0.5 sec
       setTimeout(() => {
-        console.log(`📤 [Broadcast Clients] Total: ${getAllClients().length}`);
-        io.emit("clients", getAllClients());
-      }, 500); 
-    });
+        console.log(`📤 [Initial Broadcast] Clients: ${getAllClients().length}`);
+        socket.emit("clients", getAllClients());
+      }, 500);
 
-    // 🔄 Client list request
-    socket.on("getClients", () => {
-      console.log(`📥 [GetClients] Request from ${socket.id}`);
-      socket.emit("clients", getAllClients());
+      startBroadcastInterval(); // interval start kare agar >=2 clients
     });
 
     // 📍 Handle location updates
     socket.on("locationUpdate", ({ lat, lng }) => {
-      if (!getClient(socket.id)) {
+      const client = getClient(socket.id);
+      if (!client) {
         console.warn(`⚠️ [LocationUpdate] Unregistered user: ${socket.id}`);
         return;
       }
@@ -45,7 +60,6 @@ export function registerSocketHandlers(io) {
         console.warn(`⚠️ [Chat] Unregistered socket: ${socket.id}`);
         return;
       }
-
       const chatData = {
         id: socket.id,
         username: sender.username,
@@ -53,7 +67,6 @@ export function registerSocketHandlers(io) {
         message,
         timestamp: new Date(),
       };
-
       console.log(`💬 [ChatMessage] ${sender.username}: ${message}`);
       socket.broadcast.emit("newChatMessage", chatData);
     });
@@ -67,6 +80,12 @@ export function registerSocketHandlers(io) {
         console.log(`❌ [Disconnected] Unregistered socket: ${socket.id}`);
       }
       deleteClient(socket.id);
+
+      // stop interval if clients < 2
+      if (getAllClients().length < 2 && broadcastInterval) {
+        clearInterval(broadcastInterval);
+        broadcastInterval = null;
+      }
     });
   });
 }
