@@ -11,10 +11,10 @@ export function registerSocketHandlers(io) {
   let broadcastInterval = null;
 
   const startBroadcastInterval = () => {
-    if (!broadcastInterval && getAllClients().length >= 2) {
+    if (!broadcastInterval && getAllClients().length >= 1) {
       broadcastInterval = setInterval(() => {
         const clients = getAllClients();
-        if (clients.length >= 2) {
+        if (clients.length >= 1) {
           console.log(`📤 [Interval Broadcast] Clients: ${clients.length}`);
           io.emit("clients", clients);
         } else {
@@ -82,7 +82,7 @@ export function registerSocketHandlers(io) {
       deleteClient(socket.id);
 
       // stop interval if clients < 2
-      if (getAllClients().length < 2 && broadcastInterval) {
+      if (getAllClients().length < 1 && broadcastInterval) {
         clearInterval(broadcastInterval);
         broadcastInterval = null;
       }

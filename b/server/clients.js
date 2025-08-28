@@ -14,12 +14,22 @@ export function addClient(socketId, { username, profileUrl, lat, lng }) {
 
 export function updateLocation(socketId, { lat, lng }) {
   const client = clients.get(socketId);
-  if (client) {
-    client.lat = lat;
-    client.lng = lng;
+  if (!client) {
+    console.warn(`⚠️ Location update from unregistered socket: ${socketId}`);
+    return;
   }
-  console.log("client send his location " , client.username);
+
+  // Check if location changed
+  if (client.lat === lat && client.lng === lng) {
+    // Same location, skip update and log
+    return;
+  }
+
+  client.lat = lat;
+  client.lng = lng;
+  console.log("📍 Client sent location:", client.username, "Lat:", lat, "Lng:", lng);
 }
+
 
 export function getClient(socketId) {
   return clients.get(socketId);

@@ -8,7 +8,6 @@ const SocketProvider = ({ children }) => {
   const { user } = useContext(UserContext);
   const [clients, setClients] = useState([]);
   const [currentLocation, setCurrentLocation] = useState([0, 0]);
-  const intervalRef = useRef(null);
 
   // ---------------- Live location tracking ----------------
   useEffect(() => {
@@ -79,7 +78,7 @@ const SocketProvider = ({ children }) => {
         lat: currentLocation[0],
         lng: currentLocation[1],
       });
-    }, 10000);
+    }, 5000);
 
     return () => clearInterval(id);
   }, [currentLocation, user]);
