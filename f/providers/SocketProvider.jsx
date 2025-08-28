@@ -25,7 +25,11 @@ const SocketProvider = ({ children }) => {
   // ---------------- Socket setup ----------------
   useEffect(() => {
     if (!socket) return;
-    if (!socket.connected) socket.connect();
+    if (!socket.connected) 
+    {
+      console.log("Socket not connected, connecting...");
+      socket.connect();
+    }
 
     const registerUser = () => {
       if (!user) return;

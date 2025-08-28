@@ -4,9 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "nodemon b/index.js",
-    "dev:frontend": "vite --config f/vite.config.js",
+    "dev": "nodemon b/index.js",
     "build": "vite build --config f/vite.config.js",
     "start": "node b/index.js",
     "lint": "eslint .",

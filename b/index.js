@@ -17,7 +17,3 @@ dotenv.config();
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-app.listen(3000, () => {
-  console.log(`App running on port ${3000}`);
-});

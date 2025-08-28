@@ -14,6 +14,7 @@ app.use(express.json());
 app.use("/", router);
 
 const io = new Server(server, {
+  transports: ["polling", "websocket"]   // ✅ allow both
 });
 
 registerSocketHandlers(io);

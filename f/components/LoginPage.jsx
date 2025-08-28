@@ -12,7 +12,7 @@ const LoginPage = () => {
 
     const decodedUser = jwtDecode(token); // decode JWT
     setUser(decodedUser); // set in context
-    console.log(decodedUser)
+    console.log("Login Success:", decodedUser.name);
     localStorage.setItem("googleToken", token); // optional persist
   };
 
