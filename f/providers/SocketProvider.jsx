@@ -53,8 +53,15 @@ const SocketProvider = ({ children }) => {
     });
 
     socket.on("clients", (data) => {
-      setClients(data);
+      setClients((prevClients) => {
+        // JSON.stringify simple deep equality check
+        if (JSON.stringify(prevClients) === JSON.stringify(data)) {
+          return prevClients; // same data, state update nahi kare
+        }
+        return data; // new data, update kare
+      });
     });
+
 
     return () => {
       socket.off("connect");
