@@ -1,5 +1,4 @@
-# Use Node.js 18 base image (force platform if needed)
-FROM --platform=linux/arm64 node:18
+FROM  node:18
 
 # Set working directory
 WORKDIR /app

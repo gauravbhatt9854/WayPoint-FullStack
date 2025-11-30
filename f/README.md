@@ -1,4 +1,4 @@
-DEPLOYED --: https://way.golu.codes/
+DEPLOYED --: https://way.9854.me/
 
 Guest accounts
 email:guest@gmail.com
